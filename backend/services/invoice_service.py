@@ -80,11 +80,25 @@ def invoice_exists_for_period(
         .first()
     )
 
+def generate_invoice_number(db: Session):
+    """Generate a unique invoice number."""
+
+    last_invoice = (
+        db.query(Invoice)
+        .order_by(Invoice.id.desc())
+        .first()
+    )
+
+    if not last_invoice:
+        return "INV-000001"
+
+    next_number = last_invoice.id + 1
+
+    return f"INV-{next_number:06d}"
 
 def generate_invoice_from_subscription(
     db: Session,
     subscription_id: int,
-    invoice_number: str,
     invoice_date: date,
     due_date: date,
     billing_period_start: date,
@@ -101,6 +115,9 @@ def generate_invoice_from_subscription(
 
     if not subscription:
         return None
+
+        # Generate a unique invoice number
+    invoice_number = generate_invoice_number(db)
 
     # Prevent duplicate invoices
     existing_invoice = invoice_exists_for_period(
