@@ -4,6 +4,7 @@ from sqlalchemy import (
 )
 from datetime import date
 from database import Base
+from sqlalchemy.orm import relationship
 
 
 class Quotation(Base):
@@ -24,6 +25,11 @@ class Quotation(Base):
         ForeignKey("users.id"),
         nullable=False
     )
+
+    subscriptions = relationship(
+    "Subscription",
+    back_populates="quotation"
+   )
 
     quotation_date = Column(Date, default=date.today)
     valid_until = Column(Date, nullable=False)
