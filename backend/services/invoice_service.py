@@ -317,3 +317,52 @@ def generate_due_invoices(
         generated_invoices.append(invoice)
 
     return generated_invoices
+
+def update_invoice_status(
+    db: Session,
+    invoice_id: int,
+    status: str
+):
+    """Update the status of an invoice."""
+
+    invoice = (
+        db.query(Invoice)
+        .filter(Invoice.id == invoice_id)
+        .first()
+    )
+
+    if not invoice:
+        return None
+
+    invoice.status = status
+
+    db.commit()
+    db.refresh(invoice)
+
+    return invoice
+
+def get_invoice_details(
+    db: Session,
+    invoice_id: int
+):
+    """Get an invoice with its invoice items."""
+
+    invoice = (
+        db.query(Invoice)
+        .filter(Invoice.id == invoice_id)
+        .first()
+    )
+
+    if not invoice:
+        return None
+
+    invoice_items = (
+        db.query(InvoiceItem)
+        .filter(InvoiceItem.invoice_id == invoice_id)
+        .all()
+    )
+
+    return {
+        "invoice": invoice,
+        "items": invoice_items
+    }
