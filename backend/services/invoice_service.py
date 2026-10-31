@@ -18,6 +18,23 @@ def create_invoice(
 ):
     """Create and save a new invoice."""
 
+    # Prevent duplicate invoices for the same subscription
+    # and billing period
+    if invoice_data.subscription_id:
+        existing_invoice = invoice_exists_for_period(
+            db,
+            invoice_data.subscription_id,
+            invoice_data.billing_period_start,
+            invoice_data.billing_period_end
+        )
+
+        if existing_invoice:
+            raise ValueError(
+                "An invoice already exists for this subscription "
+                "and billing period."
+            )
+
+
     new_invoice = Invoice(
         invoice_number=invoice_data.invoice_number,
         customer_id=invoice_data.customer_id,

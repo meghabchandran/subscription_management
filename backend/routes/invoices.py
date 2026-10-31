@@ -32,6 +32,7 @@ def get_db():
         db.close()
 
 
+
 @router.post(
     "/",
     response_model=InvoiceResponse
@@ -40,8 +41,14 @@ def create_new_invoice(
     invoice_data: InvoiceCreate,
     db: Session = Depends(get_db)
 ):
-    return create_invoice(db, invoice_data)
+    try:
+        return create_invoice(db, invoice_data)
 
+    except ValueError as error:
+        raise HTTPException(
+            status_code=400,
+            detail=str(error)
+        )
 
 @router.get(
     "/",
