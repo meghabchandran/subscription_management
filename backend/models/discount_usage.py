@@ -7,7 +7,7 @@ class DiscountUsage(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     discount_id = Column(Integer, ForeignKey("discounts.id"), nullable=False)
-    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
+    customer_id = Column(Integer, ForeignKey("customers.customers_id"), nullable=False)
     invoice_id = Column(Integer, ForeignKey("invoices.id"), nullable=True)
     subscription_id = Column(Integer, ForeignKey("subscriptions.id"), nullable=True)
     discount_amount = Column(Numeric(12, 2), nullable=False)
