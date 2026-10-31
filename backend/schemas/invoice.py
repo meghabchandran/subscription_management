@@ -52,3 +52,21 @@ class InvoiceResponse(InvoiceBase):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+class InvoiceItemResponse(BaseModel):
+    id: int
+    product_id: int
+    description: str
+    quantity: int
+    unit_price: Decimal
+    discount_amount: Decimal
+    tax_amount: Decimal
+    total_amount: Decimal
+
+    class Config:
+        from_attributes = True
+
+
+class InvoiceDetailsResponse(BaseModel):
+    invoice: InvoiceResponse
+    items: List[InvoiceItemResponse]
