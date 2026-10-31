@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 from sqlalchemy.orm import Session
@@ -60,13 +60,14 @@ def get_invoice_by_id(
         .first()
     )
 
+
 def invoice_exists_for_period(
     db: Session,
     subscription_id: int,
     billing_period_start: date,
     billing_period_end: date
 ):
-    """Check whether an invoice already exists for this subscription
+    """Check whether an invoice already exists for a subscription
     and billing period.
     """
 
@@ -79,6 +80,7 @@ def invoice_exists_for_period(
         )
         .first()
     )
+
 
 def generate_invoice_number(db: Session):
     """Generate a unique invoice number."""
@@ -95,6 +97,27 @@ def generate_invoice_number(db: Session):
     next_number = last_invoice.id + 1
 
     return f"INV-{next_number:06d}"
+
+
+def get_next_billing_date(
+    current_date: date,
+    billing_cycle: str
+):
+    """Calculate the next billing date based on the billing cycle."""
+
+    billing_cycle = billing_cycle.lower()
+
+    if billing_cycle == "monthly":
+        return current_date + timedelta(days=30)
+
+    elif billing_cycle == "quarterly":
+        return current_date + timedelta(days=90)
+
+    elif billing_cycle == "yearly":
+        return current_date + timedelta(days=365)
+
+    return current_date
+
 
 def generate_invoice_from_subscription(
     db: Session,
@@ -116,9 +139,6 @@ def generate_invoice_from_subscription(
     if not subscription:
         return None
 
-        # Generate a unique invoice number
-    invoice_number = generate_invoice_number(db)
-
     # Prevent duplicate invoices
     existing_invoice = invoice_exists_for_period(
         db,
@@ -133,6 +153,9 @@ def generate_invoice_from_subscription(
             "and billing period."
         )
 
+    # Generate a unique invoice number
+    invoice_number = generate_invoice_number(db)
+
     # Get subscription items
     subscription_items = (
         db.query(SubscriptionItem)
@@ -142,55 +165,138 @@ def generate_invoice_from_subscription(
         .all()
     )
 
-    # Calculate totals
+    # Calculate invoice totals
     subtotal = Decimal("0")
     total_discount = Decimal("0")
     total_tax = Decimal("0")
 
-# Create invoice items from subscription items
-for item in subscription_items:
+    for item in subscription_items:
+        item_subtotal = (
+            Decimal(item.quantity) * item.unit_price
+        )
 
-    # Calculate the item's total
-    item_subtotal = Decimal(item.quantity) * item.unit_price
+        subtotal += item_subtotal
+        total_discount += item.discount_amount
+        total_tax += item.tax_amount
 
-    item_total = (
-        item_subtotal
-        - item.discount_amount
-        + item.tax_amount
+    total_amount = calculate_total(
+        subtotal,
+        total_discount,
+        total_tax
     )
 
-    invoice_item = InvoiceItem(
-        invoice_id=new_invoice.id,
-        product_id=item.product_id,
-        description=f"Subscription item for product ID {item.product_id}",
-        quantity=item.quantity,
-        unit_price=item.unit_price,
-        discount_amount=item.discount_amount,
-        tax_amount=item.tax_amount,
-        total_amount=item_total
+    # Create the invoice
+    new_invoice = Invoice(
+        invoice_number=invoice_number,
+        customer_id=subscription.customer_id,
+        subscription_id=subscription.id,
+        invoice_date=invoice_date,
+        due_date=due_date,
+        billing_period_start=billing_period_start,
+        billing_period_end=billing_period_end,
+        subtotal=subtotal,
+        discount_amount=total_discount,
+        tax_amount=total_tax,
+        total_amount=total_amount,
+        amount_paid=Decimal("0"),
+        balance_due=total_amount,
+        status="issued"
     )
 
-    db.add(invoice_item)
+    # Add invoice to the database
+    db.add(new_invoice)
+
+    # Flush to generate the invoice ID before creating invoice items
     db.flush()
 
-        # Create invoice items from subscription items
+    # Create invoice items from subscription items
     for item in subscription_items:
+
+        item_subtotal = (
+            Decimal(item.quantity) * item.unit_price
+        )
+
+        item_total = (
+            item_subtotal
+            - item.discount_amount
+            + item.tax_amount
+        )
 
         invoice_item = InvoiceItem(
             invoice_id=new_invoice.id,
             product_id=item.product_id,
-            description=f"Subscription item for product ID {item.product_id}",
+            description=(
+                f"Subscription item for product ID "
+                f"{item.product_id}"
+            ),
             quantity=item.quantity,
             unit_price=item.unit_price,
             discount_amount=item.discount_amount,
             tax_amount=item.tax_amount,
-            total_amount=item.total_amount
+            total_amount=item_total
         )
 
         db.add(invoice_item)
 
-    # Save the invoice and all invoice items
+    # Update the subscription's next billing date
+    subscription.next_billing_date = get_next_billing_date(
+        billing_period_end,
+        subscription.billing_cycle
+    )
+
+    # Save the invoice, invoice items, and subscription update
     db.commit()
     db.refresh(new_invoice)
 
     return new_invoice
+
+def get_due_subscriptions(
+    db: Session,
+    current_date: date
+):
+    """Get active subscriptions that are due for billing."""
+
+    return (
+        db.query(Subscription)
+        .filter(
+            Subscription.status == "active",
+            Subscription.next_billing_date <= current_date
+        )
+        .all()
+    )
+
+def generate_due_invoices(
+    db: Session,
+    current_date: date
+):
+    """Generate invoices for all subscriptions due for billing."""
+
+    due_subscriptions = get_due_subscriptions(
+        db,
+        current_date
+    )
+
+    generated_invoices = []
+
+    for subscription in due_subscriptions:
+
+        billing_period_start = subscription.next_billing_date
+
+        # For now, use a simple 30-day billing period
+        billing_period_end = (
+            billing_period_start
+            + timedelta(days=30)
+        )
+
+        invoice = generate_invoice_from_subscription(
+            db=db,
+            subscription_id=subscription.id,
+            invoice_date=current_date,
+            due_date=current_date + timedelta(days=7),
+            billing_period_start=billing_period_start,
+            billing_period_end=billing_period_end
+        )
+
+        generated_invoices.append(invoice)
+
+    return generated_invoices
