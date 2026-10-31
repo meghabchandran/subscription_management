@@ -8,7 +8,7 @@ class Payment(Base):
     id = Column(Integer, primary_key=True, index=True)
     payment_number = Column(String(30), unique=True, nullable=False)
     invoice_id = Column(Integer, ForeignKey("invoices.id"), nullable=False)
-    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
+    customer_id = Column(Integer, ForeignKey("customers.customers_id"), nullable=False)
     payment_date = Column(Date, nullable=False)
     amount = Column(Numeric(12, 2), nullable=False)
     payment_method = Column(String(30), nullable=False)          # UPI | Credit Card | Debit Card | Bank Transfer | Cash

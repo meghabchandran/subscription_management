@@ -79,7 +79,6 @@ def read_invoice(
 )
 def generate_invoice(
     subscription_id: int,
-    invoice_number: str,
     invoice_date: date,
     due_date: date,
     billing_period_start: date,
@@ -90,7 +89,6 @@ def generate_invoice(
         invoice = generate_invoice_from_subscription(
             db=db,
             subscription_id=subscription_id,
-            invoice_number=invoice_number,
             invoice_date=invoice_date,
             due_date=due_date,
             billing_period_start=billing_period_start,
