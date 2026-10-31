@@ -11,7 +11,8 @@ from services.invoice_service import (
     create_invoice,
     get_invoices,
     get_invoice_by_id,
-    generate_invoice_from_subscription
+    generate_invoice_from_subscription,
+    generate_due_invoices
 )
 
 
@@ -51,6 +52,19 @@ def read_invoices(
 ):
     return get_invoices(db)
 
+@router.post("/generate-due")
+def generate_due_subscription_invoices(
+    db: Session = Depends(get_db)
+):
+    invoices = generate_due_invoices(
+        db,
+        date.today()
+    )
+
+    return {
+        "message": f"{len(invoices)} invoice(s) generated",
+        "invoices": invoices
+    }
 
 @router.get(
     "/{invoice_id}",
