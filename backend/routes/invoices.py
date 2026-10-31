@@ -11,7 +11,8 @@ from services.invoice_service import (
     create_invoice,
     get_invoices,
     get_invoice_by_id,
-    generate_invoice_from_subscription
+    generate_invoice_from_subscription,
+    generate_due_invoices
 )
 
 
@@ -51,6 +52,19 @@ def read_invoices(
 ):
     return get_invoices(db)
 
+@router.post("/generate-due")
+def generate_due_subscription_invoices(
+    db: Session = Depends(get_db)
+):
+    invoices = generate_due_invoices(
+        db,
+        date.today()
+    )
+
+    return {
+        "message": f"{len(invoices)} invoice(s) generated",
+        "invoices": invoices
+    }
 
 @router.get(
     "/{invoice_id}",
@@ -79,7 +93,6 @@ def read_invoice(
 )
 def generate_invoice(
     subscription_id: int,
-    invoice_number: str,
     invoice_date: date,
     due_date: date,
     billing_period_start: date,
@@ -90,7 +103,6 @@ def generate_invoice(
         invoice = generate_invoice_from_subscription(
             db=db,
             subscription_id=subscription_id,
-            invoice_number=invoice_number,
             invoice_date=invoice_date,
             due_date=due_date,
             billing_period_start=billing_period_start,
