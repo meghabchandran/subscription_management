@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiRequest } from "../../services/api";
 import { INVOICE_STATUS_STYLE, money } from "./invoiceUtils";
-import { INVOICE_STATUS_STYLE, money } from "./invoiceUtils";
 
 export default function Invoices() {
   const [invoices, setInvoices] = useState([]);
