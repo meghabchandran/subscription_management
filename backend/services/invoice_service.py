@@ -147,40 +147,30 @@ def generate_invoice_from_subscription(
     total_discount = Decimal("0")
     total_tax = Decimal("0")
 
-    for item in subscription_items:
-        item_subtotal = (
-            Decimal(item.quantity) * item.unit_price
-        )
+# Create invoice items from subscription items
+for item in subscription_items:
 
-        subtotal += item_subtotal
-        total_discount += item.discount_amount
-        total_tax += item.tax_amount
+    # Calculate the item's total
+    item_subtotal = Decimal(item.quantity) * item.unit_price
 
-    total_amount = calculate_total(
-        subtotal,
-        total_discount,
-        total_tax
+    item_total = (
+        item_subtotal
+        - item.discount_amount
+        + item.tax_amount
     )
 
-    # Create the invoice
-    new_invoice = Invoice(
-        invoice_number=invoice_number,
-        customer_id=subscription.customer_id,
-        subscription_id=subscription.id,
-        invoice_date=invoice_date,
-        due_date=due_date,
-        billing_period_start=billing_period_start,
-        billing_period_end=billing_period_end,
-        subtotal=subtotal,
-        discount_amount=total_discount,
-        tax_amount=total_tax,
-        total_amount=total_amount,
-        amount_paid=Decimal("0"),
-        balance_due=total_amount,
-        status="issued"
+    invoice_item = InvoiceItem(
+        invoice_id=new_invoice.id,
+        product_id=item.product_id,
+        description=f"Subscription item for product ID {item.product_id}",
+        quantity=item.quantity,
+        unit_price=item.unit_price,
+        discount_amount=item.discount_amount,
+        tax_amount=item.tax_amount,
+        total_amount=item_total
     )
 
-    db.add(new_invoice)
+    db.add(invoice_item)
     db.flush()
 
         # Create invoice items from subscription items
