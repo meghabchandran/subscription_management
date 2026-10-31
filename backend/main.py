@@ -1,30 +1,28 @@
-
 from fastapi import FastAPI
 
-from database import engine
-from models.product import Product
-from models.product_variant import ProductVariant
-from models.plan import Plan
+from database import Base, engine
+import models
+
+from routes import auth
 
 from routes import (
     product_routes,
     variant_routes,
     plan_routes,
-    quotation_routes
+    quotation_routes,
+    subscriptions,
+    invoices,
+    taxes
 )
+
+
+# Create all database tables
+Base.metadata.create_all(bind=engine)
+
 
 app = FastAPI(
-    title="Brightloop Subscription Management API",
-    description="Product, Plan and Quotation Management",
-    version="1.0.0"
+    title="Brightloop Subscription Management API"
 )
-
-@app.on_event("startup")
-def create_tables():
-    Product.__table__.create(bind=engine, checkfirst=True)
-    ProductVariant.__table__.create(bind=engine, checkfirst=True)
-    Plan.__table__.create(bind=engine, checkfirst=True)
-
 
 
 @app.get("/")
@@ -39,3 +37,7 @@ app.include_router(product_routes.router)
 app.include_router(variant_routes.router)
 app.include_router(plan_routes.router)
 app.include_router(quotation_routes.router)
+# Register Member 3 routes
+app.include_router(subscriptions.router)
+app.include_router(invoices.router)
+app.include_router(taxes.router)
