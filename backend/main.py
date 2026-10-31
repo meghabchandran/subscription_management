@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from database import Base, engine
 import models
@@ -16,15 +17,30 @@ from routes import (
 )
 
 
-# Create all database tables
-Base.metadata.create_all(bind=engine)
-
-
+# Initialize FastAPI application
 app = FastAPI(
     title="Brightloop Subscription Management API"
 )
 
 
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# Create database tables
+Base.metadata.create_all(bind=engine)
+
+
+# Root endpoint
 @app.get("/")
 def read_root():
     return {
@@ -32,12 +48,18 @@ def read_root():
     }
 
 
-# Register Member 2 routes
+# Authentication routes
+app.include_router(auth.router)
+
+
+# Member 2 - Product, Variant, Plan and Quotation routes
 app.include_router(product_routes.router)
 app.include_router(variant_routes.router)
 app.include_router(plan_routes.router)
 app.include_router(quotation_routes.router)
-# Register Member 3 routes
+
+
+# Member 3 - Subscription and Invoice routes
 app.include_router(subscriptions.router)
 app.include_router(invoices.router)
 app.include_router(taxes.router)
