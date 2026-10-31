@@ -9,7 +9,10 @@ from routes import (
     product_routes,
     variant_routes,
     plan_routes,
-    quotation_routes
+    quotation_routes,
+    subscriptions,
+    invoices,
+    taxes
 )
 
 
@@ -34,3 +37,7 @@ app.include_router(product_routes.router)
 app.include_router(variant_routes.router)
 app.include_router(plan_routes.router)
 app.include_router(quotation_routes.router)
+# Register Member 3 routes
+app.include_router(subscriptions.router)
+app.include_router(invoices.router)
+app.include_router(taxes.router)
