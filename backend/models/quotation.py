@@ -16,7 +16,7 @@ class Quotation(Base):
 
     customer_id = Column(
         Integer,
-        ForeignKey("customers.id"),
+        ForeignKey("customers.customers_id"),
         nullable=False
     )
 

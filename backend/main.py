@@ -1,10 +1,9 @@
-
 from fastapi import FastAPI
 
-from database import engine
-from models.product import Product
-from models.product_variant import ProductVariant
-from models.plan import Plan
+from database import Base, engine
+import models
+
+from routes import auth
 
 from routes import (
     product_routes,
@@ -13,18 +12,14 @@ from routes import (
     quotation_routes
 )
 
+
+# Create all database tables
+Base.metadata.create_all(bind=engine)
+
+
 app = FastAPI(
-    title="Brightloop Subscription Management API",
-    description="Product, Plan and Quotation Management",
-    version="1.0.0"
+    title="Brightloop Subscription Management API"
 )
-
-@app.on_event("startup")
-def create_tables():
-    Product.__table__.create(bind=engine, checkfirst=True)
-    ProductVariant.__table__.create(bind=engine, checkfirst=True)
-    Plan.__table__.create(bind=engine, checkfirst=True)
-
 
 
 @app.get("/")
