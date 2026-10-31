@@ -5,7 +5,7 @@ from database import Base
 class User(Base):
     __tablename__ = "users"
 
-    user_id = Column(
+    id = Column(
         Integer,
         primary_key=True,
         index=True

@@ -29,7 +29,7 @@ class Invoice(Base):
     # Foreign keys
     customer_id = Column(
         Integer,
-        ForeignKey("customers.id"),
+        ForeignKey("customers.customers_id"),
         nullable=False
     )
 

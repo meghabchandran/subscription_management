@@ -1,17 +1,9 @@
-
 from fastapi import FastAPI
 
 from database import Base, engine
-from models.user import User
-from models.customer import Customer
+import models
+
 from routes import auth
-
-Base.metadata.create_all(bind=engine)
-
-from database import engine
-from models.product import Product
-from models.product_variant import ProductVariant
-from models.plan import Plan
 
 from routes import (
     product_routes,
@@ -19,6 +11,11 @@ from routes import (
     plan_routes,
     quotation_routes
 )
+
+
+# Create all database tables
+Base.metadata.create_all(bind=engine)
+
 
 app = FastAPI(
     title="Brightloop Subscription Management API"

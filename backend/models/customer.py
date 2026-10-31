@@ -7,7 +7,7 @@ from database import Base
 class Customer(Base):
     __tablename__ = "customers"
 
-    customer_id = Column(
+    customers_id = Column(
         Integer,
         primary_key=True,
         index=True

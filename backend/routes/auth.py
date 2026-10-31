@@ -75,7 +75,7 @@ def register(
 
     return {
         "message": "Registration successful",
-        "user_id": new_user.user_id,
+        "id": new_user.id,
         "name": new_user.name,
         "email": new_user.email,
         "role": new_user.role
@@ -97,13 +97,13 @@ def login(
         )
 
     access_token = create_access_token(
-        {"sub": str(user.user_id), "role": user.role}
+        {"sub": str(user.id), "role": user.role}
     )
 
     return {
         "message": "Login successful",
         "access_token": access_token,
         "token_type": "bearer",
-        "user_id": user.user_id,
+        "id": user.id,
         "role": user.role
     }
