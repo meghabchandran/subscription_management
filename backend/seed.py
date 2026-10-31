@@ -1,7 +1,12 @@
 from datetime import date, timedelta
 from decimal import Decimal
 
-from pwdlib import PasswordHash
+from passlib.context import CryptContext
+
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto"
+)
 
 from database import SessionLocal
 
@@ -11,7 +16,6 @@ from models import (
     Invoice, InvoiceItem, Payment, Discount, DiscountUsage, Tax
 )
 
-password_hasher = PasswordHash.recommended()
 
 
 def seed_database():
@@ -64,45 +68,64 @@ def seed_database():
         db.add_all(customers)
         db.flush()
 
+        
         # -------------------------------------------------
         # 2. USERS - 5 RECORDS
         # -------------------------------------------------
 
         users = [
-            User(full_name="Brightloop Admin",
-                 email="admin@brightloop.com",
-                 password_hash=password_hasher.hash("Admin@123"),
-                 phone="9000000001", role="Admin",
-                 is_active=True),
+            User(
+                full_name="Brightloop Admin",
+                email="admin@brightloop.com",
+                password_hash=pwd_context.hash("Admin@123"),
+                phone="9000000001",
+                role="Admin",
+                is_active=True
+            ),
 
-            User(full_name="Brightloop Staff",
-                 email="staff@brightloop.com",
-                 password_hash=password_hasher.hash("Staff@123"),
-                 phone="9000000002", role="Staff",
-                 is_active=True),
+            User(
+                full_name="Brightloop Staff",
+                email="staff@brightloop.com",
+                password_hash=pwd_context.hash("Staff@123"),
+                phone="9000000002",
+                role="Staff",
+                is_active=True
+            ),
 
-            User(full_name="Arun Kumar",
-                 email="abc@company.com",
-                 password_hash=password_hasher.hash("Customer@123"),
-                 phone="9876543210", role="Customer",
-                 customer_id=customers[0].id, is_active=True),
+            User(
+                full_name="Arun Kumar",
+                email="abc@company.com",
+                password_hash=pwd_context.hash("Customer@123"),
+                phone="9876543210",
+                role="Customer",
+                customer_id=customers[0].id,
+                is_active=True
+            ),
 
-            User(full_name="Priya Nair",
-                 email="nova@company.com",
-                 password_hash=password_hasher.hash("Customer@123"),
-                 phone="9876543211", role="Customer",
-                 customer_id=customers[1].id, is_active=True),
+            User(
+                full_name="Priya Nair",
+                email="nova@company.com",
+                password_hash=pwd_context.hash("Customer@123"),
+                phone="9876543211",
+                role="Customer",
+                customer_id=customers[1].id,
+                is_active=True
+            ),
 
-            User(full_name="Rahul Das",
-                 email="techworld@company.com",
-                 password_hash=password_hasher.hash("Customer@123"),
-                 phone="9876543212", role="Customer",
-                 customer_id=customers[2].id, is_active=True),
+            User(
+                full_name="Rahul Das",
+                email="techworld@company.com",
+                password_hash=pwd_context.hash("Customer@123"),
+                phone="9876543212",
+                role="Customer",
+                customer_id=customers[2].id,
+                is_active=True
+            ),
         ]
 
         db.add_all(users)
         db.flush()
-
+        
         # -------------------------------------------------
         # 3. PRODUCTS - 5 RECORDS
         # -------------------------------------------------
