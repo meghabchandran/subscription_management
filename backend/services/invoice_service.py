@@ -18,6 +18,23 @@ def create_invoice(
 ):
     """Create and save a new invoice."""
 
+    # Prevent duplicate invoices for the same subscription
+    # and billing period
+    if invoice_data.subscription_id:
+        existing_invoice = invoice_exists_for_period(
+            db,
+            invoice_data.subscription_id,
+            invoice_data.billing_period_start,
+            invoice_data.billing_period_end
+        )
+
+        if existing_invoice:
+            raise ValueError(
+                "An invoice already exists for this subscription "
+                "and billing period."
+            )
+
+
     new_invoice = Invoice(
         invoice_number=invoice_data.invoice_number,
         customer_id=invoice_data.customer_id,
@@ -300,3 +317,52 @@ def generate_due_invoices(
         generated_invoices.append(invoice)
 
     return generated_invoices
+
+def update_invoice_status(
+    db: Session,
+    invoice_id: int,
+    status: str
+):
+    """Update the status of an invoice."""
+
+    invoice = (
+        db.query(Invoice)
+        .filter(Invoice.id == invoice_id)
+        .first()
+    )
+
+    if not invoice:
+        return None
+
+    invoice.status = status
+
+    db.commit()
+    db.refresh(invoice)
+
+    return invoice
+
+def get_invoice_details(
+    db: Session,
+    invoice_id: int
+):
+    """Get an invoice with its invoice items."""
+
+    invoice = (
+        db.query(Invoice)
+        .filter(Invoice.id == invoice_id)
+        .first()
+    )
+
+    if not invoice:
+        return None
+
+    invoice_items = (
+        db.query(InvoiceItem)
+        .filter(InvoiceItem.invoice_id == invoice_id)
+        .all()
+    )
+
+    return {
+        "invoice": invoice,
+        "items": invoice_items
+    }
